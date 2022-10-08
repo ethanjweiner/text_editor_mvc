@@ -5,10 +5,26 @@ const App = {
     this.textBox = document.querySelector('.text_box');
 
     // State
+    // ======== 1, 3 =========
     this.buttons = [
       {
         command: 'bold',
         class: 'fa-bold',
+        pushed: false,
+      },
+      {
+        command: 'italic',
+        class: 'fa-italic',
+        pushed: false,
+      },
+      {
+        command: 'underline',
+        class: 'fa-underline',
+        pushed: false,
+      },
+      {
+        command: 'strikeThrough',
+        class: 'fa-strikethrough',
         pushed: false,
       },
       {
@@ -17,18 +33,13 @@ const App = {
         pushed: false,
       },
       {
-        command: 'insertOrderList',
-        class: 'fa-list-ol',
-        pushed: false,
-      },
-      {
         command: 'insertUnorderedList',
         class: 'fa-list-ul',
         pushed: false,
       },
       {
-        command: 'italic',
-        class: 'fa-italic',
+        command: 'insertOrderedList',
+        class: 'fa-list-ol',
         pushed: false,
       },
       {
@@ -51,19 +62,7 @@ const App = {
         class: 'fa-align-justify',
         pushed: false,
       },
-      {
-        command: 'strikeThrough',
-        class: 'fa-strikethrough',
-        pushed: false,
-      },
-      {
-        command: 'underline',
-        class: 'fa-underline',
-        pushed: false,
-      },
     ];
-
-    this.newState = false;
 
     // Event handling
     this.bindButtonClick();
@@ -71,14 +70,62 @@ const App = {
 
     // Rendering
     this.setupTemplates();
+
+    // ======== 1 =========
     this.renderButtons();
   },
 
+  // Event handlers
+  bindButtonClick() {
+    this.buttonsContainer.addEventListener('click', (e) => {
+      const target = e.target;
+
+      if (target instanceof HTMLButtonElement) {
+        // ======== 3 =========
+        const command = target.dataset.command;
+
+        if (command === 'createLink') {
+          this.createLink();
+        } else {
+          document.execCommand(command);
+        }
+
+        this.updateButtons();
+        // ======== 2 =========
+        this.textBox.focus();
+      }
+    });
+  },
+
+  createLink() {
+    const url = prompt('Enter a URL for the link.');
+    document.execCommand('createLink', false, url);
+  },
+
+  bindSelectionChange() {
+    document.addEventListener('selectionchange', () => this.updateButtons());
+  },
+
+  // State updates
+  // ======== 1 =========
+  updateButtons() {
+    this.updateButtonStates();
+    this.renderButtons();
+  },
+
+  updateButtonStates() {
+    this.buttons.forEach((button) => {
+      button.pushed = document.queryCommandState(button.command);
+    });
+  },
+
+  // Rendering
   setupTemplates() {
     const template = document.querySelector('#buttons_template').innerHTML;
     this.buttonsTemplate = Handlebars.compile(template);
   },
 
+  // ======== 1 =========
   renderButtons() {
     this.clearButtonsContainer();
 
@@ -91,40 +138,6 @@ const App = {
   clearButtonsContainer() {
     this.buttonsContainer.querySelectorAll('button').forEach((button) => {
       button.remove();
-    });
-  },
-
-  // Event handlers
-  bindButtonClick() {
-    this.buttonsContainer.addEventListener('click', (e) => {
-      const target = e.target;
-
-      if (target instanceof HTMLButtonElement) {
-        const command = target.dataset.command;
-        document.execCommand(command);
-        this.updateButtonStates();
-        this.renderButtons();
-        this.newState = true; // Don't rerender buttons yet
-        this.textBox.focus();
-      }
-    });
-  },
-
-  bindSelectionChange() {
-    document.addEventListener('selectionchange', () => {
-      if (this.newState) {
-        this.newState = false;
-        return;
-      }
-
-      this.updateButtonStates();
-      this.renderButtons();
-    });
-  },
-
-  updateButtonStates() {
-    this.buttons.forEach((button) => {
-      button.pushed = document.queryCommandState(button.command);
     });
   },
 };
